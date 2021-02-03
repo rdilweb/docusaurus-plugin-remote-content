@@ -1,103 +1,129 @@
-/**
- * See https://v2.docusaurus.io/docs/lifecycle-apis if you need more help!
- */
+import type { LoadContext, Props } from "@docusaurus/types"
+import type commander from "commander"
+import axios from "axios"
+import { writeFileSync } from "fs"
+import { join } from "path"
 
-import { Plugin, LoadContext } from "@docusaurus/types"
-
 /**
- * Put your plugin's options in here.
- *
- * NOTE: This will NOT perform runtime typechecking on the options.
- * This is only for development. You will need to implement Joi or a
- * solution like it if you need to validate options.
+ * The plugin's options.
  */
-export interface MyPluginOptions {
-  // this option will either be undefined or a boolean
-  someOption?: boolean
+export interface RemoteContentPluginOptions {
+    /**
+     * Delete local content after everything?
+     */
+    performCleanup?: boolean
+
+    /**
+     * Is this instance for the docs plugin?
+     */
+    docsIntegration?: boolean
+    /**
+     * Is this instance for the blog plugin?
+     */
+    blogIntegration?: boolean
+
+    /**
+     * The base url for the source of the content.
+     */
+    sourceBaseUrl: string
+    /**
+     * Specify the document paths from the sourceBaseUrl
+     * in a string array or function that returns a string array.
+     */
+    documents?: string[] | (() => string[])
 }
 
-/**
- * The type of data your plugin loads.
- * This is set to never because the example doesn't load any data.
- */
-export type MyPluginLoadableContent = never
+export type LoadableContent = void
 
-export default function myPlugin(
-  context: LoadContext,
-  options: MyPluginOptions
-): Plugin<MyPluginLoadableContent, MyPluginOptions> {
-  return {
-    // change this to something unique, or caches may conflict!
-    name: "docusaurus-plugin-example",
+interface Collectable {
+    url: string
+    identifier: string
+}
 
-    /*
-     * THIS IS COMMENTED OUT BECAUSE IT IS HARD TO UNDERSTAND FOR BEGINNERS.
-     * FEEL FREE TO USE IF YOU KNOW WHAT YOU ARE DOING!
-    async loadContent() {
-      // The loadContent hook is executed after siteConfig and env has been loaded.
-      // You can return a JavaScript object that will be passed to contentLoaded hook.
-    },
+// @ts-ignore
+export default class PluginRemoteContent extends Plugin<LoadableContent, RemoteContentPluginOptions> {
+    name = "docusaurus-plugin-remote-content"
 
-    async contentLoaded({content, actions}) {
-      // The contentLoaded hook is done after loadContent hook is done.
-      // `actions` are set of functional API provided by Docusaurus (e.g. addRoute)
-    },
-    */
+    options: RemoteContentPluginOptions
+    context: LoadContext
 
-    async postBuild(props) {
-      // After docusaurus <build> finish.
-    },
+    constructor(context: LoadContext, options: RemoteContentPluginOptions) {
+        super(options, context)
 
-    // TODO
-    async postStart(props) {
-      // docusaurus <start> finish
-    },
+        this.options = options
+        this.context = context
 
-    configureWebpack(config, isServer) {
-      // Modify internal webpack config. If returned value is an Object, it
-      // will be merged into the final config using webpack-merge;
-      // If the returned value is a function, it will receive the config as the 1st argument and an isServer flag as the 2nd argument.
-      return {
-        // new webpack options here
-      }
-    },
+        this.onLoad()
+    }
 
-    getPathsToWatch() {
-      // Paths to watch.
-      return [
-        // additional paths to watch here
-      ]
-    },
+    onLoad(): void {
+        let { blogIntegration, docsIntegration, sourceBaseUrl, documents } = this.options
 
-    /*
-    You most likely won't need this right away either.
+        if (!([blogIntegration, docsIntegration].includes(true))) {
+            throw new Error("No integrations enabled! Please enable one of the blogIntegration, docsIntegration, or pagesIntegration fields in your remote-content plugin options.")
+        }
 
-    getThemePath() {
-      // Returns the path to the directory where the theme components can
-      // be found.
-    },
-    */
+        if (documents === undefined) {
+            throw new Error("The documents field is undefined, so I don't know what to fetch!")
+        }
 
-    getClientModules() {
-      // Return an array of paths to the modules that are to be imported
-      // in the client bundle. These modules are imported globally before
-      // React even renders the initial UI.
-      return []
-    },
+        if (sourceBaseUrl === undefined) {
+            throw new Error("The sourceBaseUrl field is undefined, so I don't know where to fetch from!")
+        }
 
-    extendCli(cli) {
-      // Register extra command(s) to enhance the CLI of Docusaurus
-      cli
-        .command("dothing")
-        .description("Does something")
-        .action(() => {})
-    },
+        if (!sourceBaseUrl.endsWith("/")) {
+            sourceBaseUrl = `${sourceBaseUrl}/`
+        }
+    }
 
-    injectHtmlTags() {
-      // Inject head and/or body HTML tags.
-      return {
-        // extra html tags here
-      }
-    },
-  }
+    findCollectables(): Collectable[] {
+        const { documents, sourceBaseUrl } = this.options
+        const a: Collectable[] = []
+
+        if (this.options.docsIntegration === true) {
+            (
+                (typeof documents == "function" ? documents.call(this.context.siteConfig) : documents) as string[]
+            ).forEach((d) => {
+                if (d.endsWith("md")) {
+                    a.push({ url: `${sourceBaseUrl}/${d}`, identifier: d })
+                } else {
+                    a.push({ url: `${sourceBaseUrl}/${d}.md`, identifier: `${d}.md` })
+                }
+            })
+        }
+
+        return a
+    }
+
+    async loadContent(): Promise<LoadableContent> {
+        const c = this.findCollectables()
+        let loc = ""
+
+        if (this.options.docsIntegration) {
+            loc = join(this.context.siteDir, "docs")
+        }
+
+        if (this.options.blogIntegration) {
+            loc = join(this.context.siteDir, "blog")
+        }
+
+        for (let i = 0; i < c.length; i++) {
+            writeFileSync(join(loc, c[i].identifier), await (await axios({ url: c[i].url })).data)
+        }
+    }
+
+    async contentLoaded(): Promise<void> {
+        // The contentLoaded hook is done after loadContent hook is done.
+    }
+
+    async postBuild(props: Props): Promise<void> {
+        // After docusaurus <build> finish.
+    }
+
+    extendCli(cli: commander.CommanderStatic): void {
+        cli
+            .command("dothing")
+            .description("Does something")
+            .action(() => {})
+    }
 }
