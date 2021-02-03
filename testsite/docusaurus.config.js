@@ -108,7 +108,10 @@ module.exports = {
     [
       require.resolve("../build/index.js"),
       {
-        // options here, or if you have none, just leave this empty.
+        docsIntegration: true,
+        sourceBaseUrl:
+          "https://raw.githubusercontent.com/rdilweb/docs/master/docs",
+        documents: ["api"],
       },
     ],
   ],
