@@ -1,5 +1,4 @@
-import type { LoadContext } from "@docusaurus/types"
-import type commander from "commander"
+import type { LoadContext, Plugin } from "@docusaurus/types"
 import axios from "axios"
 import { writeFileSync } from "fs"
 import { join } from "path"
@@ -15,8 +14,9 @@ export interface RemoteContentPluginOptions {
    * Delete local content after everything?
    */
   performCleanup?: boolean
+
   /**
-   * CLI only mode
+   * CLI only mode.
    */
   noRuntimeDownloads?: boolean
 
@@ -24,6 +24,7 @@ export interface RemoteContentPluginOptions {
    * Is this instance for the docs plugin?
    */
   docsIntegration?: boolean
+
   /**
    * Is this instance for the blog plugin?
    */
@@ -33,6 +34,7 @@ export interface RemoteContentPluginOptions {
    * The base url for the source of the content.
    */
   sourceBaseUrl: string
+
   /**
    * Specify the document paths from the sourceBaseUrl
    * in a string array or function that returns a string array.
@@ -50,7 +52,7 @@ interface Collectable {
 export default function pluginRemoteContent(
   context: LoadContext,
   options: RemoteContentPluginOptions
-): any {
+): Plugin<LoadableContent, RemoteContentPluginOptions> {
   let {
     blogIntegration,
     docsIntegration,
@@ -63,6 +65,12 @@ export default function pluginRemoteContent(
   if (![blogIntegration, docsIntegration].includes(true)) {
     throw new Error(
       "No integrations enabled! Please enable either the blogIntegration or docsIntegration fields in your remote-content plugin options."
+    )
+  }
+
+  if (blogIntegration === true && docsIntegration === true) {
+    throw new Error(
+      "You can only have one integration enabled per plugin instance!"
     )
   }
 
@@ -112,44 +120,43 @@ export default function pluginRemoteContent(
     return ""
   }
 
-  // 'this' is a huge mess in JS, so we avoid that where we can, such as here.
-  const pluginReturn = {
+  async function fetchContent(): Promise<void> {
+    const c = findCollectables()
+
+    for (let i = 0; i < c.length; i++) {
+      writeFileSync(
+        join(getTargetDirectory(), c[i].identifier),
+        await (await axios({ url: c[i].url })).data
+      )
+    }
+  }
+
+  async function cleanContent(): Promise<void> {
+    const c = findCollectables()
+
+    for (let i = 0; i < c.length; i++) {
+      delFile(join(getTargetDirectory(), c[i].identifier))
+    }
+  }
+
+  return {
     name: `docusaurus-plugin-remote-content-${
       [blogIntegration && "blog", docsIntegration && "docs"].filter(Boolean)[0]
     }`,
 
     async loadContent(): Promise<LoadableContent> {
       if ([false, undefined].includes(noRuntimeDownloads)) {
-        return await pluginReturn.fetchContent()
+        return await fetchContent()
       }
     },
 
     async postBuild(): Promise<void> {
       if (performCleanup !== false) {
-        return await pluginReturn.cleanContent()
+        return await cleanContent()
       }
     },
 
-    async fetchContent(): Promise<void> {
-      const c = findCollectables()
-
-      for (let i = 0; i < c.length; i++) {
-        writeFileSync(
-          join(getTargetDirectory(), c[i].identifier),
-          await (await axios({ url: c[i].url })).data
-        )
-      }
-    },
-
-    async cleanContent(): Promise<void> {
-      const c = findCollectables()
-
-      for (let i = 0; i < c.length; i++) {
-        delFile(join(getTargetDirectory(), c[i].identifier))
-      }
-    },
-
-    extendCli(cli: commander.CommanderStatic): void {
+    extendCli(cli): void {
       const t = [blogIntegration && "blog", docsIntegration && "docs"].filter(
         Boolean
       )[0]
@@ -160,7 +167,7 @@ export default function pluginRemoteContent(
         .action(() => {
           ;(async () => {
             const startTime = new Date()
-            await pluginReturn.fetchContent()
+            await fetchContent()
             console.log(
               chalk`{green Successfully fetched content in} {white ${milli(
                 (new Date() as any) - (startTime as any)
@@ -175,7 +182,7 @@ export default function pluginRemoteContent(
         .action(() => {
           ;(async () => {
             const startTime = new Date()
-            await pluginReturn.cleanContent()
+            await cleanContent()
             console.log(
               chalk`{green Successfully deleted content in} {white ${milli(
                 (new Date() as any) - (startTime as any)
@@ -185,6 +192,4 @@ export default function pluginRemoteContent(
         })
     },
   }
-
-  return pluginReturn
 }

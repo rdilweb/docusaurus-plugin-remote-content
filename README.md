@@ -27,6 +27,43 @@ as every time you run `docusaurus build` or `docusaurus start`, the content is d
 
 This is the secondary mode. You can use the Docusaurus CLI to update the content when needed.
 All you need to do is run `docusaurus download-remote-X`, where X is either `blog` or `docs`.
+You can also use `docusaurus clean-remote-X` to remove the downloaded files.
+
+## Alright, so how do I use this???
+
+Okay. Assuming you want to use constant sync, follow these steps:
+
+1. In your `docusaurus.config.js`, if you don't already, create a plugin array, and add this plugin. For example:
+
+```javascript
+module.exports = {
+  // ...
+  plugins: [
+    [
+      "docusaurus-plugin-remote-content",
+      {
+        // options here
+      },
+    ],
+  ],
+}
+```
+
+2. Configure the plugin - see the list of options below.
+
+## Options
+
+- `sourceBaseUrl`: (_required_) `string` - The base URL that your remote docs are located.
+  All the IDs specified in the `documents` option will be resolved relative to this.
+  For example, if you have 2 docs located at https://example.com/content/hello.md and https://example.com/content/thing.md,
+  the `sourceBaseUrl` would need to be set to https://example.com/content/
+- `documents`: (_required_) `string array or a function that returns a string array` - The documents to fetch.
+  Following the previous example, if you had set `sourceBaseUrl` to https://example.com/content/,
+  and wanted to fetch thing.md and hello.md, you would just set `documents` to `["hello", "thing"]`
+- `blogIntegration`: (optional) `boolean` - If the documents specified should be downloaded to the blog directory.
+- `docsIntegration`: (optional) `boolean` - If the documents specified should be downloaded to the docs directory.
+- `performCleanup`: (optional) `boolean` - If the documents downloaded should be deleted after the build is completed. Defaults to true.
+- `noRuntimeDownloads`: (optional) `boolean` - If you only want to use the CLI to download the remote content, you should change this to true.
 
 ## Contributing
 

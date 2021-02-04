@@ -1,11 +1,12 @@
 {
   "name": "docusaurus-plugin-remote-content",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A Docusaurus v2 plugin that allows you to fetch content from remote sources!",
   "main": "build/index.js",
   "repository": "https://github.com/rdilweb/docusaurus-plugin-remote-content.git",
   "author": "Reece Dunham <me@rdil.rocks>",
   "license": "MIT",
+  "types": "build/index.d.ts",
   "scripts": {
     "build": "tsc",
     "prettier": "prettier --write **/*.{js,jsx,ts,tsx,md,yml,json}"
@@ -36,6 +37,13 @@
     "rimraf": "^3.0.2"
   },
   "files": [
-    "build"
-  ]
+    "build",
+    "src"
+  ],
+  "directories": {
+    "example": "testsite",
+    "lib": "src"
+  },
+  "homepage": "https://github.com/rdilweb/docusaurus-plugin-remote-content",
+  "keywords": ["docusaurus", "v2", "plugin", "remote", "content"]
 }
