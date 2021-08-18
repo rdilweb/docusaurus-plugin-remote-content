@@ -27,7 +27,7 @@ as every time you run `docusaurus build` or `docusaurus start`, the content is d
 
 This is the secondary mode. You can use the Docusaurus CLI to update the content when needed.
 All you need to do is run `docusaurus download-remote-X`, where X is either `blog` or `docs`.
-You can also use `docusaurus clean-remote-X` to remove the downloaded files.
+You can also use `docusaurus clear-remote-X` to remove the downloaded files.
 
 ## Alright, so how do I use this???
 
