@@ -1,6 +1,6 @@
 import type { LoadContext, Plugin } from "@docusaurus/types"
 import axios from "axios"
-import { writeFileSync } from "fs"
+import { existsSync, writeFileSync, mkdirSync } from "fs"
 import { join } from "path"
 import { sync as delFile } from "rimraf"
 import chalk from "chalk"
@@ -31,7 +31,7 @@ export interface RemoteContentPluginOptions {
   blogIntegration?: boolean
 
   /**
-   * The base url for the source of the content.
+   * The base URL for the source of the content.
    */
   sourceBaseUrl: string
 
@@ -40,6 +40,11 @@ export interface RemoteContentPluginOptions {
    * in a string array or function that returns a string array.
    */
   documents?: string[] | (() => string[])
+
+  /**
+   * The name of the subfolder within the destination (e.g. docs/myfolder/<output here>) to save the content to.
+   */
+  outputDirectory?: string
 }
 
 export type LoadableContent = void
@@ -52,7 +57,7 @@ interface Collectable {
 export default function pluginRemoteContent(
   context: LoadContext,
   options: RemoteContentPluginOptions
-): Plugin<LoadableContent, RemoteContentPluginOptions> {
+): Plugin<LoadableContent> {
   let {
     blogIntegration,
     docsIntegration,
@@ -60,6 +65,7 @@ export default function pluginRemoteContent(
     documents,
     noRuntimeDownloads,
     performCleanup,
+    outputDirectory,
   } = options
 
   if (![blogIntegration, docsIntegration].includes(true)) {
@@ -74,13 +80,13 @@ export default function pluginRemoteContent(
     )
   }
 
-  if (documents === undefined) {
+  if (!documents) {
     throw new Error(
       "The documents field is undefined, so I don't know what to fetch!"
     )
   }
 
-  if (sourceBaseUrl === undefined) {
+  if (!sourceBaseUrl) {
     throw new Error(
       "The sourceBaseUrl field is undefined, so I don't know where to fetch from!"
     )
@@ -108,16 +114,30 @@ export default function pluginRemoteContent(
     return a
   }
 
-  function getTargetDirectory(): string {
+  async function getTargetDirectory(): Promise<string> {
+    let returnValue = undefined
+
     if (docsIntegration) {
-      return join(context.siteDir, "docs")
+      returnValue = join(context.siteDir, "docs")
     }
 
     if (blogIntegration) {
-      return join(context.siteDir, "blog")
+      returnValue = join(context.siteDir, "blog")
     }
 
-    return ""
+    if (!returnValue) {
+      throw new Error("Fell through! No integrations are enabled! Please check the documentation.")
+    }
+
+    if (outputDirectory) {
+      returnValue = join(returnValue, outputDirectory)
+    }
+
+    if (!existsSync(returnValue)) {
+      mkdirSync(returnValue)
+    }
+
+    return returnValue
   }
 
   async function fetchContent(): Promise<void> {
@@ -125,8 +145,8 @@ export default function pluginRemoteContent(
 
     for (let i = 0; i < c.length; i++) {
       writeFileSync(
-        join(getTargetDirectory(), c[i].identifier),
-        await (await axios({ url: c[i].url })).data
+        join(await getTargetDirectory(), c[i].identifier),
+        (await axios({ url: c[i].url })).data
       )
     }
   }
@@ -135,7 +155,7 @@ export default function pluginRemoteContent(
     const c = findCollectables()
 
     for (let i = 0; i < c.length; i++) {
-      delFile(join(getTargetDirectory(), c[i].identifier))
+      delFile(join(await getTargetDirectory(), c[i].identifier))
     }
   }
 
@@ -145,7 +165,7 @@ export default function pluginRemoteContent(
     }`,
 
     async loadContent(): Promise<LoadableContent> {
-      if ([false, undefined].includes(noRuntimeDownloads)) {
+      if (!noRuntimeDownloads) {
         return await fetchContent()
       }
     },
@@ -164,31 +184,27 @@ export default function pluginRemoteContent(
       cli
         .command(`download-remote-${t}`)
         .description(`Downloads the remote ${t} data.`)
-        .action(() => {
-          ;(async () => {
-            const startTime = new Date()
-            await fetchContent()
-            console.log(
-              chalk`{green Successfully fetched content in} {white ${milli(
-                (new Date() as any) - (startTime as any)
-              )}}{green !}`
-            )
-          })()
+        .action(async () => {
+          const startTime = new Date()
+          await fetchContent()
+          console.log(
+            chalk`{green Successfully fetched content in} {white ${milli(
+              (new Date() as any) - (startTime as any)
+            )}}{green !}`
+          )
         })
 
       cli
         .command(`clear-remote-${t}`)
         .description(`Removes the local copy of the remote ${t} data.`)
-        .action(() => {
-          ;(async () => {
-            const startTime = new Date()
-            await cleanContent()
-            console.log(
-              chalk`{green Successfully deleted content in} {white ${milli(
-                (new Date() as any) - (startTime as any)
-              )}}{green !}`
-            )
-          })()
+        .action(async () => {
+          const startTime = new Date()
+          await cleanContent()
+          console.log(
+            chalk`{green Successfully deleted content in} {white ${milli(
+              (new Date() as any) - (startTime as any)
+            )}}{green !}`
+          )
         })
     },
   }

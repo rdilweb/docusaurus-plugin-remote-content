@@ -108,10 +108,22 @@ module.exports = {
     [
       require.resolve("../build/index.js"),
       {
+        id: "basicTest",
         docsIntegration: true,
         sourceBaseUrl:
-          "https://raw.githubusercontent.com/rdilweb/docs/master/docs",
+          "https://raw.githubusercontent.com/rdilweb/rdil.rocks/master/docs/docs",
         documents: ["api"],
+      },
+    ],
+    [
+      require.resolve("../build/index.js"),
+      {
+        id: "outputDirectoryTest",
+        docsIntegration: true,
+        sourceBaseUrl:
+          "https://raw.githubusercontent.com/PowerShell/PowerShell/master",
+        documents: ["README", "CODE_OF_CONDUCT"],
+        outputDirectory: "output-dir-testing",
       },
     ],
   ],

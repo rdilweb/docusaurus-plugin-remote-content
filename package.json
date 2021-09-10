@@ -15,14 +15,14 @@
     "semi": false
   },
   "devDependencies": {
-    "@docusaurus/types": "^2.0.0-alpha.70",
+    "@docusaurus/types": "^2.0.0-beta.6",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "@types/react-helmet": "^6.1.0",
     "@types/rimraf": "^3.0.0",
     "commander": "^7.0.0",
     "prettier": "^2.2.1",
-    "typescript": "^4.1.3"
+    "typescript": "^4.4.2"
   },
   "peerDependencies": {
     "@docusaurus/core": "2.x"
@@ -31,7 +31,7 @@
     "url": "https://github.com/rdilweb/docusaurus-plugin-remote-content/issues"
   },
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^0.21.4",
     "chalk": "^4.1.0",
     "pretty-ms": "^7.0.1",
     "rimraf": "^3.0.2"
@@ -45,5 +45,8 @@
     "lib": "src"
   },
   "homepage": "https://github.com/rdilweb/docusaurus-plugin-remote-content",
-  "keywords": ["docusaurus", "v2", "plugin", "remote", "content"]
+  "keywords": ["docusaurus", "v2", "plugin", "remote", "content"],
+  "engines": {
+    "node": ">=12"
+  }
 }
