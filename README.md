@@ -64,6 +64,7 @@ module.exports = {
 - `docsIntegration`: (optional) `boolean` - If the documents specified should be downloaded to the docs directory.
 - `performCleanup`: (optional) `boolean` - If the documents downloaded should be deleted after the build is completed. Defaults to true.
 - `noRuntimeDownloads`: (optional) `boolean` - If you only want to use the CLI to download the remote content, you should change this to true.
+- `outputDirectory`: (optional) `string` - The subfolder to emit the downloaded content to (e.g. `docs/<subfolder>/<downloaded file.md>` - the prefix is set based on if you have the docs or blog integrations active).
 
 ## Contributing
 
@@ -79,4 +80,4 @@ It isn't really that hard. Follow these simple steps!:
 When you update the plugin, in order to preview your changes on the test site, you need to:
 
 1. Use the first shell you opened to re-run `yarn build` (in the repository's _root_ directory).
-2. In the second shell, `Control+C` (or `Command+C` on macOS) the running Docusaurus dev server, and re-run `yarn start`.
+2. In the second shell, `Control+C` the running Docusaurus dev server, and re-run `yarn start`.

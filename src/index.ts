@@ -100,9 +100,11 @@ export default function pluginRemoteContent(
     const a: Collectable[] = []
 
     if (docsIntegration === true || blogIntegration === true) {
-      ;((typeof documents == "function"
-        ? documents.call(context.siteConfig)
-        : documents) as string[]).forEach((d) => {
+      ;(
+        (typeof documents == "function"
+          ? documents.call(context.siteConfig)
+          : documents) as string[]
+      ).forEach((d) => {
         if (d.endsWith("md")) {
           a.push({ url: `${sourceBaseUrl}/${d}`, identifier: d })
         } else {
@@ -126,7 +128,9 @@ export default function pluginRemoteContent(
     }
 
     if (!returnValue) {
-      throw new Error("Fell through! No integrations are enabled! Please check the documentation.")
+      throw new Error(
+        "Fell through! No integrations are enabled! Please check the documentation."
+      )
     }
 
     if (outputDirectory) {
