@@ -10,206 +10,182 @@ import milli from "pretty-ms"
  * The plugin's options.
  */
 export interface RemoteContentPluginOptions {
-  /**
-   * Delete local content after everything?
-   */
-  performCleanup?: boolean
+    /**
+     * Delete local content after everything?
+     */
+    performCleanup?: boolean
 
-  /**
-   * CLI only mode.
-   */
-  noRuntimeDownloads?: boolean
+    /**
+     * CLI only mode.
+     */
+    noRuntimeDownloads?: boolean
 
-  /**
-   * Is this instance for the docs plugin?
-   */
-  docsIntegration?: boolean
+    /**
+     * The base URL for the source of the content.
+     */
+    sourceBaseUrl: string
 
-  /**
-   * Is this instance for the blog plugin?
-   */
-  blogIntegration?: boolean
+    /**
+     * The name you want to give to the data. Used by the CLI, and *must* be path safe.
+     */
+    name: string
 
-  /**
-   * The base URL for the source of the content.
-   */
-  sourceBaseUrl: string
+    /**
+     * The base output directory (e.g. "docs" or "blog").
+     */
+    outDir: string
 
-  /**
-   * Specify the document paths from the sourceBaseUrl
-   * in a string array or function that returns a string array.
-   */
-  documents?: string[] | (() => string[])
-
-  /**
-   * The name of the subfolder within the destination (e.g. docs/myfolder/<output here>) to save the content to.
-   */
-  outputDirectory?: string
+    /**
+     * Specify the document paths from the sourceBaseUrl
+     * in a string array or function that returns a string array.
+     */
+    documents?: string[] | Promise<string[]> | (() => string[])
 }
 
-export type LoadableContent = void
+type LoadableContent = void
 
-interface Collectable {
-  url: string
-  identifier: string
+export interface Collectable {
+    url: string
+    identifier: string
 }
 
 export default function pluginRemoteContent(
-  context: LoadContext,
-  options: RemoteContentPluginOptions
+    context: LoadContext,
+    options: RemoteContentPluginOptions
 ): Plugin<LoadableContent> {
-  let {
-    blogIntegration,
-    docsIntegration,
-    sourceBaseUrl,
-    documents,
-    noRuntimeDownloads,
-    performCleanup,
-    outputDirectory,
-  } = options
+    let {
+        name,
+        sourceBaseUrl,
+        outDir,
+        documents,
+        noRuntimeDownloads,
+        performCleanup,
+    } = options
 
-  if (![blogIntegration, docsIntegration].includes(true)) {
-    throw new Error(
-      "No integrations enabled! Please enable either the blogIntegration or docsIntegration fields in your remote-content plugin options."
-    )
-  }
+    if (!name) {
+        throw new Error(
+            "I need a name to work with! Please make sure it is path-safe."
+        )
+    }
 
-  if (blogIntegration === true && docsIntegration === true) {
-    throw new Error(
-      "You can only have one integration enabled per plugin instance!"
-    )
-  }
+    if (!outDir) {
+        throw new Error(
+            "No output directory specified! Please specify one in your docusaurus-plugin-remote-content config (e.g. to download to the 'docs' folder, set outDir to docs.)"
+        )
+    }
 
-  if (!documents) {
-    throw new Error(
-      "The documents field is undefined, so I don't know what to fetch!"
-    )
-  }
+    if (!documents) {
+        throw new Error(
+            "The documents field is undefined, so I don't know what to fetch! It should be a string array, function that returns a string array, or promise that resolves with a string array."
+        )
+    }
 
-  if (!sourceBaseUrl) {
-    throw new Error(
-      "The sourceBaseUrl field is undefined, so I don't know where to fetch from!"
-    )
-  }
+    if (!sourceBaseUrl) {
+        throw new Error(
+            "The sourceBaseUrl field is undefined, so I don't know where to fetch from!"
+        )
+    }
 
-  if (!sourceBaseUrl.endsWith("/")) {
-    sourceBaseUrl = `${sourceBaseUrl}/`
-  }
+    if (!sourceBaseUrl.endsWith("/")) {
+        sourceBaseUrl = `${sourceBaseUrl}/`
+    }
 
-  function findCollectables(): Collectable[] {
-    const a: Collectable[] = []
+    async function findCollectables(): Promise<Collectable[]> {
+        const a: Collectable[] = []
 
-    if (docsIntegration === true || blogIntegration === true) {
-      ;(
-        (typeof documents == "function"
-          ? documents.call(context.siteConfig)
-          : documents) as string[]
-      ).forEach((d) => {
-        if (d.endsWith("md")) {
-          a.push({ url: `${sourceBaseUrl}/${d}`, identifier: d })
-        } else {
-          a.push({ url: `${sourceBaseUrl}/${d}.md`, identifier: `${d}.md` })
+        const resolvedDocs =
+            typeof documents === "function"
+                ? await documents()
+                : (documents as string[])
+
+        for (const d of resolvedDocs) {
+            a.push({ url: `${sourceBaseUrl}/${d}`, identifier: d })
         }
-      })
+
+        return a
     }
 
-    return a
-  }
+    async function getTargetDirectory(): Promise<string> {
+        const returnValue = join(context.siteDir, outDir)
 
-  async function getTargetDirectory(): Promise<string> {
-    let returnValue = undefined
+        if (!existsSync(returnValue)) {
+            mkdirSync(returnValue, { recursive: true })
+        }
 
-    if (docsIntegration) {
-      returnValue = join(context.siteDir, "docs")
+        return returnValue
     }
 
-    if (blogIntegration) {
-      returnValue = join(context.siteDir, "blog")
+    async function fetchContent(): Promise<void> {
+        const c = await findCollectables()
+
+        for (const { identifier, url } of c) {
+            const checkIdent = identifier.split("/").filter((seg) => seg !== "")
+            checkIdent.pop()
+
+            // if we are outputting to a subdirectory, and
+            if (checkIdent.length > 0) {
+                mkdirSync(
+                    join(await getTargetDirectory(), checkIdent.join("/")),
+                    { recursive: true }
+                )
+            }
+
+            writeFileSync(
+                join(await getTargetDirectory(), identifier),
+                (await axios({ url })).data
+            )
+        }
     }
 
-    if (!returnValue) {
-      throw new Error(
-        "Fell through! No integrations are enabled! Please check the documentation."
-      )
+    async function cleanContent(): Promise<void> {
+        const c = await findCollectables()
+
+        for (const { identifier } of c) {
+            delFile(join(await getTargetDirectory(), identifier))
+        }
     }
 
-    if (outputDirectory) {
-      returnValue = join(returnValue, outputDirectory)
+    return {
+        name: `docusaurus-plugin-remote-content-${name}`,
+
+        async loadContent(): Promise<LoadableContent> {
+            if (!noRuntimeDownloads) {
+                return await fetchContent()
+            }
+        },
+
+        async postBuild(): Promise<void> {
+            if (performCleanup !== false) {
+                return await cleanContent()
+            }
+        },
+
+        extendCli(cli): void {
+            cli.command(`download-remote-${name}`)
+                .description(`Downloads the remote ${name} data.`)
+                .action(async () => {
+                    const startTime = new Date()
+                    await fetchContent()
+                    console.log(
+                        chalk`{green Successfully fetched content in} {white ${milli(
+                            (new Date() as any) - (startTime as any)
+                        )}}{green !}`
+                    )
+                })
+
+            cli.command(`clear-remote-${name}`)
+                .description(
+                    `Removes the local copy of the remote ${name} data.`
+                )
+                .action(async () => {
+                    const startTime = new Date()
+                    await cleanContent()
+                    console.log(
+                        chalk`{green Successfully deleted content in} {white ${milli(
+                            (new Date() as any) - (startTime as any)
+                        )}}{green !}`
+                    )
+                })
+        },
     }
-
-    if (!existsSync(returnValue)) {
-      mkdirSync(returnValue)
-    }
-
-    return returnValue
-  }
-
-  async function fetchContent(): Promise<void> {
-    const c = findCollectables()
-
-    for (let i = 0; i < c.length; i++) {
-      writeFileSync(
-        join(await getTargetDirectory(), c[i].identifier),
-        (await axios({ url: c[i].url })).data
-      )
-    }
-  }
-
-  async function cleanContent(): Promise<void> {
-    const c = findCollectables()
-
-    for (let i = 0; i < c.length; i++) {
-      delFile(join(await getTargetDirectory(), c[i].identifier))
-    }
-  }
-
-  return {
-    name: `docusaurus-plugin-remote-content-${
-      [blogIntegration && "blog", docsIntegration && "docs"].filter(Boolean)[0]
-    }`,
-
-    async loadContent(): Promise<LoadableContent> {
-      if (!noRuntimeDownloads) {
-        return await fetchContent()
-      }
-    },
-
-    async postBuild(): Promise<void> {
-      if (performCleanup !== false) {
-        return await cleanContent()
-      }
-    },
-
-    extendCli(cli): void {
-      const t = [blogIntegration && "blog", docsIntegration && "docs"].filter(
-        Boolean
-      )[0]
-
-      cli
-        .command(`download-remote-${t}`)
-        .description(`Downloads the remote ${t} data.`)
-        .action(async () => {
-          const startTime = new Date()
-          await fetchContent()
-          console.log(
-            chalk`{green Successfully fetched content in} {white ${milli(
-              (new Date() as any) - (startTime as any)
-            )}}{green !}`
-          )
-        })
-
-      cli
-        .command(`clear-remote-${t}`)
-        .description(`Removes the local copy of the remote ${t} data.`)
-        .action(async () => {
-          const startTime = new Date()
-          await cleanContent()
-          console.log(
-            chalk`{green Successfully deleted content in} {white ${milli(
-              (new Date() as any) - (startTime as any)
-            )}}{green !}`
-          )
-        })
-    },
-  }
 }

@@ -43,16 +43,16 @@ Strikethrough uses two tildes. ~~Scratch this.~~
 
 1. First ordered list item
 1. Another item
-   - Unordered sub-list.
+    - Unordered sub-list.
 1. Actual numbers don't matter, just that it's a number
-   1. Ordered sub-list
+    1. Ordered sub-list
 1. And another item.
 
-- Unordered list can use asterisks
+-   Unordered list can use asterisks
 
-* Or minuses
+*   Or minuses
 
-- Or pluses
+-   Or pluses
 
 ---
 
@@ -113,7 +113,7 @@ But let's throw in a <b>tag</b>.
 
 ```js {2}
 function highlightMe() {
-  console.log("This line can be highlighted!")
+    console.log("This line can be highlighted!")
 }
 ```
 
