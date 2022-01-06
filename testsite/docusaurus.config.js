@@ -121,11 +121,15 @@ module.exports = {
             {
                 name: "powershell-docs",
                 id: "outputDirectoryTest",
-                docsIntegration: true,
                 sourceBaseUrl:
                     "https://raw.githubusercontent.com/PowerShell/PowerShell/master",
                 documents: ["README.md", "CODE_OF_CONDUCT.md"],
                 outDir: "docs/output-dir-testing",
+                requestConfig: {
+                    headers: {
+                        "Hello-World": "ThisIsAHeader",
+                    },
+                },
             },
         ],
     ],

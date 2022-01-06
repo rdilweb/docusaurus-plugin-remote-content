@@ -1,5 +1,5 @@
 import type { LoadContext, Plugin } from "@docusaurus/types"
-import axios from "axios"
+import axios, { AxiosRequestConfig } from "axios"
 import { existsSync, writeFileSync, mkdirSync } from "fs"
 import { join } from "path"
 import { sync as delFile } from "rimraf"
@@ -39,7 +39,14 @@ export interface RemoteContentPluginOptions {
      * Specify the document paths from the sourceBaseUrl
      * in a string array or function that returns a string array.
      */
-    documents?: string[] | Promise<string[]> | (() => string[])
+    documents: string[] | Promise<string[]> | (() => string[])
+
+    /**
+     * Additional options for Axios.
+     *
+     * @see https://axios-http.com/docs/req_config
+     */
+    requestConfig?: Partial<AxiosRequestConfig>
 }
 
 type LoadableContent = void
@@ -58,8 +65,9 @@ export default function pluginRemoteContent(
         sourceBaseUrl,
         outDir,
         documents,
-        noRuntimeDownloads,
-        performCleanup,
+        noRuntimeDownloads = false,
+        performCleanup = true,
+        requestConfig = {},
     } = options
 
     if (!name) {
@@ -95,8 +103,8 @@ export default function pluginRemoteContent(
 
         const resolvedDocs =
             typeof documents === "function"
-                ? await documents()
-                : (documents as string[])
+                ? documents()
+                : ((await documents) as string[])
 
         for (const d of resolvedDocs) {
             a.push({ url: `${sourceBaseUrl}/${d}`, identifier: d })
@@ -132,7 +140,7 @@ export default function pluginRemoteContent(
 
             writeFileSync(
                 join(await getTargetDirectory(), identifier),
-                (await axios({ url })).data
+                (await axios({ url, ...requestConfig })).data
             )
         }
     }
