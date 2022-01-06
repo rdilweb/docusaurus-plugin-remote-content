@@ -3,7 +3,7 @@ import axios, { AxiosRequestConfig } from "axios"
 import { existsSync, writeFileSync, mkdirSync } from "fs"
 import { join } from "path"
 import { sync as delFile } from "rimraf"
-import chalk from "chalk"
+import picocolors from "picocolors"
 import milli from "pretty-ms"
 
 /**
@@ -163,7 +163,7 @@ export default function pluginRemoteContent(
         },
 
         async postBuild(): Promise<void> {
-            if (performCleanup !== false) {
+            if (performCleanup) {
                 return await cleanContent()
             }
         },
@@ -175,9 +175,11 @@ export default function pluginRemoteContent(
                     const startTime = new Date()
                     await fetchContent()
                     console.log(
-                        chalk`{green Successfully fetched content in} {white ${milli(
-                            (new Date() as any) - (startTime as any)
-                        )}}{green !}`
+                        picocolors.green(`Successfully fetched content in `) +
+                            picocolors.white(
+                                milli((new Date() as any) - (startTime as any))
+                            ) +
+                            picocolors.green(`!`)
                     )
                 })
 
@@ -189,9 +191,11 @@ export default function pluginRemoteContent(
                     const startTime = new Date()
                     await cleanContent()
                     console.log(
-                        chalk`{green Successfully deleted content in} {white ${milli(
-                            (new Date() as any) - (startTime as any)
-                        )}}{green !}`
+                        picocolors.green(`Successfully deleted content in `) +
+                            picocolors.white(
+                                milli((new Date() as any) - (startTime as any))
+                            ) +
+                            picocolors.green(`!`)
                     )
                 })
         },
