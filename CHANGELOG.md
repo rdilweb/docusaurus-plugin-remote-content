@@ -1,5 +1,18 @@
 # Changelog
 
+## v2.1.0
+
+Features:
+
+-   Added the ability to customize the Axios request configuration (fixes #26).
+-   Replaced `chalk` with `picocolors`, which has a smaller install size and faster API.
+-   Improved the readability of the options section in the readme.
+-   Reduced install size by excluding TypeScript build metadata.
+
+Bug fixes:
+
+-   Removed the optional marker from the type of the `documents` option.
+
 ## v2.0.0 - 12/02/2021
 
 Breaking changes:
