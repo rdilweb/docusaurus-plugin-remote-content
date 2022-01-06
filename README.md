@@ -21,7 +21,7 @@ This plugin has 2 modes, and you can choose which to use depending on your needs
 This is the default mode.
 You will want to gitignore the docs/blog directory that the plugin downloads content to,
 as every time you run `docusaurus build` or `docusaurus start`, the content is downloaded,
-(and optionally but enabled by default, when it stops, the local copy of the content is deleted).
+(and when it stops, the local copy of the content is deleted - this is configurable).
 
 ### CLI Sync
 
@@ -29,7 +29,7 @@ This is the secondary mode. You can use the Docusaurus CLI to update the content
 All you need to do is run `docusaurus download-remote-X`, where X is the `name` option given to the plugin.
 You can also use `docusaurus clear-remote-X` to remove the downloaded files.
 
-## Alright, so how do I use this???
+## Alright, so how do I use this??
 
 Okay. Assuming you want to use constant sync, follow these steps:
 
@@ -57,17 +57,53 @@ module.exports = {
 
 ## Options
 
--   `name`: (_required_) `string` - The name of this plugin instance. Set to `content` if you aren't sure what this does. (used by CLI)
--   `sourceBaseUrl`: (_required_) `string` - The base URL that your remote docs are located.
-    All the IDs specified in the `documents` option will be resolved relative to this.
-    For example, if you have 2 docs located at https://example.com/content/hello.md and https://example.com/content/thing.md,
-    the `sourceBaseUrl` would need to be set to https://example.com/content/.
--   `outDir`: (_required_) `string` - The subfolder to emit the downloaded content to.
--   `documents`: (_required_) `string[]` or `Promise<string[]>` - The documents to fetch. Must be file names (e.g. end in `.md`)
-    Following the previous example, if you had set `sourceBaseUrl` to https://example.com/content/,
-    and wanted to fetch thing.md and hello.md, you would just set `documents` to `["hello", "thing"]`
--   `performCleanup`: (optional) `boolean` - If the documents downloaded should be deleted after the build is completed. Defaults to true.
--   `noRuntimeDownloads`: (optional) `boolean` - If you only want to use the CLI to download the remote content, you should change this to true.
+### `name`
+
+(_Required_) `string`
+
+The name of this plugin instance. Set to `content` if you aren't sure what this does. (used by CLI)
+
+### `sourceBaseUrl`
+
+(_Required_) `string`
+
+The base URL that your remote docs are located.
+All the IDs specified in the `documents` option will be resolved relative to this.
+For example, if you have 2 docs located at https://example.com/content/hello.md and https://example.com/content/thing.md,
+the `sourceBaseUrl` would need to be set to https://example.com/content/.
+
+### `outDir`
+
+(_Required_) `string`
+
+The folder to emit the downloaded content to.
+
+### `documents`
+
+(_Required_) `string[]` or `Promise<string[]>`
+
+The documents to fetch. Must be file names (e.g. end in `.md`)
+Following the previous example, if you had set `sourceBaseUrl` to https://example.com/content/,
+and wanted to fetch thing.md and hello.md, you would just set `documents` to `["hello", "thing"]`
+
+### `performCleanup`
+
+(Optional) `boolean` - default = `true`
+
+If the documents downloaded should be deleted after the build is completed. Defaults to true.
+
+### `noRuntimeDownloads`
+
+(Optional) `boolean` - default = `false`
+
+If you only want to use the Docusaurus CLI to download the remote content, you should change this to true.
+
+### `requestConfig`
+
+(optional) [`AxiosRequestConfig`](https://axios-http.com/docs/req_config)
+
+Additional configuration options for the network requests that fetch the content.
+See the documentation for details: https://axios-http.com/docs/req_config
 
 ## Contributing
 
@@ -76,11 +112,12 @@ It isn't really that hard. Follow these simple steps!:
 1. Clone a fork of this repository locally using your IDE of choice.
 2. Edit the source.
 3. Run `yarn build`.
-4. Open a second terminal, and make the working directory the `testsite`.
-5. Start the test site (`yarn start`).
-6. You now have the test site running the plugin.
+4. Start the test site (`yarn testsite:start`).
+5. You now have the test site running the plugin.
 
 When you update the plugin, in order to preview your changes on the test site, you need to:
 
-1. Use the first shell you opened to re-run `yarn build` (in the repository's _root_ directory).
-2. In the second shell, `Control+C` the running Docusaurus dev server, and re-run `yarn start`.
+1. Quit the dev server.
+2. Make your changes.
+3. Rerun `yarn build`.
+4. Restart the test site (`yarn testsite:start`).
