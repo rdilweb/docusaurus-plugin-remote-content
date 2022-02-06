@@ -1,11 +1,10 @@
 import type { LoadContext, Plugin } from "@docusaurus/types"
 import axios, { AxiosRequestConfig } from "axios"
-import { existsSync, mkdirSync, writeFileSync } from "fs"
-
-import { sync as delFile } from "rimraf"
+import { existsSync, writeFileSync, mkdirSync } from "fs"
 import { join } from "path"
-import milli from "pretty-ms"
+import { sync as delFile } from "rimraf"
 import picocolors from "picocolors"
+import milli from "pretty-ms"
 
 /**
  * The plugin's options.
