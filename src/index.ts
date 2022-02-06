@@ -1,10 +1,11 @@
 import type { LoadContext, Plugin } from "@docusaurus/types"
 import axios, { AxiosRequestConfig } from "axios"
-import { existsSync, writeFileSync, mkdirSync } from "fs"
-import { join } from "path"
+import { existsSync, mkdirSync, writeFileSync } from "fs"
+
 import { sync as delFile } from "rimraf"
-import picocolors from "picocolors"
+import { join } from "path"
 import milli from "pretty-ms"
+import picocolors from "picocolors"
 
 /**
  * The plugin's options.
@@ -107,7 +108,7 @@ export default function pluginRemoteContent(
                 : ((await documents) as string[])
 
         for (const d of resolvedDocs) {
-            a.push({ url: `${sourceBaseUrl}/${d}`, identifier: d })
+            a.push({ url: `${sourceBaseUrl}${d}`, identifier: d })
         }
 
         return a
