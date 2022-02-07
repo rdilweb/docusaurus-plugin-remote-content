@@ -132,5 +132,19 @@ module.exports = {
                 },
             },
         ],
+        [
+            require.resolve("../build/index.js"),
+            {
+                name: "github-labels",
+                id: "pathSlashesTest",
+                sourceBaseUrl:
+                    "https://api.github.com/repos/rdilweb/docusaurus-plugin-remote-content",
+                documents: ["labels"],
+                outDir: "docs/output-dir-testing/_data",
+                requestConfig: {
+                    responseType: "arraybuffer",
+                },
+            },
+        ],
     ],
 }

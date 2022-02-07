@@ -107,7 +107,7 @@ export default function pluginRemoteContent(
                 : ((await documents) as string[])
 
         for (const d of resolvedDocs) {
-            a.push({ url: `${sourceBaseUrl}/${d}`, identifier: d })
+            a.push({ url: `${sourceBaseUrl}${d}`, identifier: d })
         }
 
         return a
