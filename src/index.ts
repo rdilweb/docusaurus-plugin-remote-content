@@ -49,17 +49,15 @@ export interface RemoteContentPluginOptions {
     requestConfig?: Partial<AxiosRequestConfig>
 }
 
-type LoadableContent = void
-
 export interface Collectable {
     url: string
     identifier: string
 }
 
-export default function pluginRemoteContent(
+export default async function pluginRemoteContent(
     context: LoadContext,
     options: RemoteContentPluginOptions
-): Plugin<LoadableContent> {
+): Promise<Plugin<void>> {
     let {
         name,
         sourceBaseUrl,
@@ -130,7 +128,7 @@ export default function pluginRemoteContent(
             const checkIdent = identifier.split("/").filter((seg) => seg !== "")
             checkIdent.pop()
 
-            // if we are outputting to a subdirectory, and
+            // if we are outputting to a subdirectory, make sure it exists
             if (checkIdent.length > 0) {
                 mkdirSync(
                     join(await getTargetDirectory(), checkIdent.join("/")),
@@ -153,12 +151,26 @@ export default function pluginRemoteContent(
         }
     }
 
+    // honestly, this may not work, but at least I tried.
+    // don't really have any other solid way of making
+    // sure the promise is fulfilled before we reach loadContent.
+    // this should ideally be removed when Docusaurus 2 becomes stable
+    const check = {
+        hasDownloaded: false,
+    }
+
+    if (!noRuntimeDownloads) {
+        await fetchContent()
+        check.hasDownloaded = true
+    }
+
     return {
         name: `docusaurus-plugin-remote-content-${name}`,
 
-        async loadContent(): Promise<LoadableContent> {
-            if (!noRuntimeDownloads) {
-                return await fetchContent()
+        async loadContent(): Promise<void> {
+            if (!check.hasDownloaded && !noRuntimeDownloads) {
+                // we have not downloaded, and we want runtime downloads
+                throw new Error("[plugin-remote-content] Illegal state reached - see https://github.com/rdilweb/docusaurus-plugin-remote-content/issues/25#issuecomment-1034042103 for details!")
             }
         },
 
