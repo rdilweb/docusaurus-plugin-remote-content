@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.0.0 - 2/9/2022
+
+Breaking changes:
+
+-   Docusaurus v2.0.0-beta.15 or newer is now required.
+
+Bug fixes:
+
+-   Fix issue with multiple slashes in the URL (fixed by @essential-randomness in #31).
+
 ## v2.1.0 - 1/6/2022
 
 Features:

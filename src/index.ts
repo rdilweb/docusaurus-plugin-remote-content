@@ -170,7 +170,9 @@ export default async function pluginRemoteContent(
         async loadContent(): Promise<void> {
             if (!check.hasDownloaded && !noRuntimeDownloads) {
                 // we have not downloaded, and we want runtime downloads
-                throw new Error("[plugin-remote-content] Illegal state reached - see https://github.com/rdilweb/docusaurus-plugin-remote-content/issues/25#issuecomment-1034042103 for details!")
+                throw new Error(
+                    "[plugin-remote-content] Illegal state reached - see https://github.com/rdilweb/docusaurus-plugin-remote-content/issues/25#issuecomment-1034042103 for details!"
+                )
             }
         },
 
