@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.1.0 - 4/12/2022
+
+New features:
+
+-   Add option for modifying output file names and contents dynamically.
+
 ## v3.0.0 - 2/9/2022
 
 Breaking changes:

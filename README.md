@@ -105,6 +105,34 @@ If you only want to use the Docusaurus CLI to download the remote content, you s
 Additional configuration options for the network requests that fetch the content.
 See the documentation for details: https://axios-http.com/docs/req_config
 
+### `modifyContent`
+
+(optional) `(filename: string, content: string) => { filename?: string, content?: string }}`
+
+This option accepts a function that gets the name of the output file and the content of it as a string,
+and can return a modified version of either. The return value must be either undefined (which means "skip modifying this thing"),
+or an object containing the keys `filename` and/or `content`, containing the values you want to use.
+
+For example, this would add front matter to files that have the word "README" in their names:
+
+```js
+// in the plugin's options:
+modifyContent(filename, content) {
+    if (filename.includes("README")) {
+        return {
+            content: `---
+description: We are now adding a front matter field to any README files!
+---
+
+${content}`, // <-- this last part adds in the rest of the content, which would otherwise be discarded
+        }
+    }
+
+    // we don't want to modify this item, since it doesn't contain "README" in the name
+    return undefined
+},
+```
+
 ## Contributing
 
 It isn't really that hard. Follow these simple steps!:

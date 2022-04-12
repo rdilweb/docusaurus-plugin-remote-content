@@ -47,6 +47,18 @@ export interface RemoteContentPluginOptions {
      * @see https://axios-http.com/docs/req_config
      */
     requestConfig?: Partial<AxiosRequestConfig>
+
+    /**
+     * An optional function that modifies the file name and content of a downloaded file.
+     *
+     * @param filename The file's name.
+     * @param content The file's content.
+     * @returns undefined to leave the content/name as is, or an object containing the filename and the content.
+     */
+    modifyContent?(
+        filename: string,
+        content: string
+    ): { filename?: string; content?: string } | undefined
 }
 
 export interface Collectable {
@@ -66,6 +78,7 @@ export default async function pluginRemoteContent(
         noRuntimeDownloads = false,
         performCleanup = true,
         requestConfig = {},
+        modifyContent = () => undefined,
     } = options
 
     if (!name) {
@@ -125,7 +138,24 @@ export default async function pluginRemoteContent(
         const c = await findCollectables()
 
         for (const { identifier, url } of c) {
-            const checkIdent = identifier.split("/").filter((seg) => seg !== "")
+            //#region Run modifyContent (and fetch the data)
+            let content = (await axios({ url, ...requestConfig })).data
+            let newIdent = identifier
+
+            const called = modifyContent?.(newIdent, content)
+
+            let cont
+            if ((cont = called?.content) && typeof cont === "string") {
+                content = called!.content
+            }
+
+            let fn
+            if ((fn = called?.filename) && typeof fn === "string") {
+                newIdent = fn
+            }
+            //#endregion
+
+            const checkIdent = newIdent.split("/").filter((seg) => seg !== "")
             checkIdent.pop()
 
             // if we are outputting to a subdirectory, make sure it exists
@@ -136,10 +166,7 @@ export default async function pluginRemoteContent(
                 )
             }
 
-            writeFileSync(
-                join(await getTargetDirectory(), identifier),
-                (await axios({ url, ...requestConfig })).data
-            )
+            writeFileSync(join(await getTargetDirectory(), newIdent), content)
         }
     }
 

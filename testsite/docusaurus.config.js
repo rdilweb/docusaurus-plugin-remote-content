@@ -130,6 +130,20 @@ module.exports = {
                         "Hello-World": "ThisIsAHeader",
                     },
                 },
+                modifyContent(filename, content) {
+                    if (filename.includes("CODE_OF_CONDUCT")) {
+                        return {
+                            filename,
+                            content: `---
+title: Code of Conduct with Front Matter
+---
+
+${content}`
+                        }
+                    }
+
+                    return undefined
+                },
             },
         ],
         [
