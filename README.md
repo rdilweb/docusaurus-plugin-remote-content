@@ -84,7 +84,7 @@ The folder to emit the downloaded content to.
 
 The documents to fetch. Must be file names (e.g. end in `.md`)
 Following the previous example, if you had set `sourceBaseUrl` to https://example.com/content/,
-and wanted to fetch thing.md and hello.md, you would just set `documents` to `["hello", "thing"]`
+and wanted to fetch thing.md and hello.md, you would just set `documents` to `["hello.md", "thing.md"]`
 
 ### `performCleanup`
 
