@@ -182,26 +182,13 @@ export default async function pluginRemoteContent(
     // don't really have any other solid way of making
     // sure the promise is fulfilled before we reach loadContent.
     // this should ideally be removed when Docusaurus 2 becomes stable
-    const check = {
-        hasDownloaded: false,
-    }
 
     if (!noRuntimeDownloads) {
         await fetchContent()
-        check.hasDownloaded = true
     }
 
     return {
         name: `docusaurus-plugin-remote-content-${name}`,
-
-        async loadContent(): Promise<void> {
-            if (!check.hasDownloaded && !noRuntimeDownloads) {
-                // we have not downloaded, and we want runtime downloads
-                throw new Error(
-                    "[plugin-remote-content] Illegal state reached - see https://github.com/rdilweb/docusaurus-plugin-remote-content/issues/25#issuecomment-1034042103 for details!"
-                )
-            }
-        },
 
         async postBuild(): Promise<void> {
             if (performCleanup) {
