@@ -178,11 +178,6 @@ export default async function pluginRemoteContent(
         }
     }
 
-    // honestly, this may not work, but at least I tried.
-    // don't really have any other solid way of making
-    // sure the promise is fulfilled before we reach loadContent.
-    // this should ideally be removed when Docusaurus 2 becomes stable
-
     if (!noRuntimeDownloads) {
         await fetchContent()
     }
