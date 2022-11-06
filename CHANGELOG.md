@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.0.0
+
+Breaking changes:
+
+-   Dropped support for Docusaurus `<2.0.0`.
+-   Dropped support for Node.js `<16.14` (what Docusaurus requires now).
+
 ## v3.1.0 - 4/12/2022
 
 New features:

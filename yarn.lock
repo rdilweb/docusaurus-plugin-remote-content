@@ -2086,25 +2086,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docusaurus/types@npm:2.1.0":
-  version: 2.1.0
-  resolution: "@docusaurus/types@npm:2.1.0"
-  dependencies:
-    "@types/history": "npm:^4.7.11"
-    "@types/react": "npm:*"
-    commander: "npm:^5.1.0"
-    joi: "npm:^17.6.0"
-    react-helmet-async: "npm:^1.3.0"
-    utility-types: "npm:^3.10.0"
-    webpack: "npm:^5.73.0"
-    webpack-merge: "npm:^5.8.0"
-  peerDependencies:
-    react: ^16.8.4 || ^17.0.0
-    react-dom: ^16.8.4 || ^17.0.0
-  checksum: 009dfb3f0be4a29cc4d40db4b0bc41db0097946da9b2447436d3d4cb6a56acd080b53d18a299b1517f032237213df5adb3408978a22a6feefba9964ae8432c54
-  languageName: node
-  linkType: hard
-
 "@docusaurus/types@npm:2.2.0":
   version: 2.2.0
   resolution: "@docusaurus/types@npm:2.2.0"
@@ -4855,7 +4836,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "docusaurus-plugin-remote-content@workspace:."
   dependencies:
-    "@docusaurus/types": "npm:2.1.0"
+    "@docusaurus/types": "npm:2.2.0"
     "@types/react": "npm:^18.0.20"
     "@types/react-dom": "npm:^18.0.6"
     "@types/react-helmet": "npm:^6.1.4"

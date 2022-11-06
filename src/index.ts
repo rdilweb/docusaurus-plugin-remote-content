@@ -1,71 +1,12 @@
 import type { LoadContext, Plugin } from "@docusaurus/types"
-import axios, { AxiosRequestConfig } from "axios"
+import axios from "axios"
 import { existsSync, writeFileSync, mkdirSync } from "fs"
 import { join } from "path"
 import { sync as delFile } from "rimraf"
-import picocolors from "picocolors"
-import milli from "pretty-ms"
+import { timeIt } from "./utils"
+import { Fetchable, RemoteContentPluginOptions } from "./types"
 
-/**
- * The plugin's options.
- */
-export interface RemoteContentPluginOptions {
-    /**
-     * Delete local content after everything?
-     */
-    performCleanup?: boolean
-
-    /**
-     * CLI only mode.
-     */
-    noRuntimeDownloads?: boolean
-
-    /**
-     * The base URL for the source of the content.
-     */
-    sourceBaseUrl: string
-
-    /**
-     * The name you want to give to the data. Used by the CLI, and *must* be path safe.
-     */
-    name: string
-
-    /**
-     * The base output directory (e.g. "docs" or "blog").
-     */
-    outDir: string
-
-    /**
-     * Specify the document paths from the sourceBaseUrl
-     * in a string array or function that returns a string array.
-     */
-    documents: string[] | Promise<string[]> | (() => string[])
-
-    /**
-     * Additional options for Axios.
-     *
-     * @see https://axios-http.com/docs/req_config
-     */
-    requestConfig?: Partial<AxiosRequestConfig>
-
-    /**
-     * An optional function that modifies the file name and content of a downloaded file.
-     *
-     * @param filename The file's name.
-     * @param content The file's content.
-     * @returns undefined to leave the content/name as is, or an object containing the filename and the content.
-     */
-    modifyContent?(
-        filename: string,
-        content: string
-    ): { filename?: string; content?: string } | undefined
-}
-
-export interface Collectable {
-    url: string
-    identifier: string
-}
-
+// noinspection JSUnusedGlobalSymbols
 export default async function pluginRemoteContent(
     context: LoadContext,
     options: RemoteContentPluginOptions
@@ -105,20 +46,16 @@ export default async function pluginRemoteContent(
         )
     }
 
-    if (!sourceBaseUrl.endsWith("/")) {
-        sourceBaseUrl = `${sourceBaseUrl}/`
-    }
-
-    async function findCollectables(): Promise<Collectable[]> {
-        const a: Collectable[] = []
+    async function findRemoteItems(): Promise<Fetchable[]> {
+        const a: Fetchable[] = []
 
         const resolvedDocs =
             typeof documents === "function"
                 ? documents()
                 : ((await documents) as string[])
 
-        for (const d of resolvedDocs) {
-            a.push({ url: `${sourceBaseUrl}${d}`, identifier: d })
+        for (const id of resolvedDocs) {
+            a.push({ id })
         }
 
         return a
@@ -135,18 +72,24 @@ export default async function pluginRemoteContent(
     }
 
     async function fetchContent(): Promise<void> {
-        const c = await findCollectables()
+        const c = await findRemoteItems()
 
-        for (const { identifier, url } of c) {
+        for (const { id } of c) {
             //#region Run modifyContent (and fetch the data)
-            let content = (await axios({ url, ...requestConfig })).data
-            let newIdent = identifier
+            let content = (
+                await axios({
+                    baseURL: sourceBaseUrl,
+                    url: id,
+                    ...requestConfig,
+                })
+            ).data
+            let newIdent = id
 
             const called = modifyContent?.(newIdent, content)
 
-            let cont
-            if ((cont = called?.content) && typeof cont === "string") {
-                content = called!.content
+            let cont = called?.content
+            if (cont && typeof cont === "string") {
+                content = cont
             }
 
             let fn
@@ -171,10 +114,10 @@ export default async function pluginRemoteContent(
     }
 
     async function cleanContent(): Promise<void> {
-        const c = await findCollectables()
+        const c = await findRemoteItems()
 
-        for (const { identifier } of c) {
-            delFile(join(await getTargetDirectory(), identifier))
+        for (const { id } of c) {
+            delFile(join(await getTargetDirectory(), id))
         }
     }
 
@@ -182,6 +125,7 @@ export default async function pluginRemoteContent(
         await fetchContent()
     }
 
+    // noinspection JSUnusedGlobalSymbols
     return {
         name: `docusaurus-plugin-remote-content-${name}`,
 
@@ -194,33 +138,15 @@ export default async function pluginRemoteContent(
         extendCli(cli): void {
             cli.command(`download-remote-${name}`)
                 .description(`Downloads the remote ${name} data.`)
-                .action(async () => {
-                    const startTime = new Date()
-                    await fetchContent()
-                    console.log(
-                        picocolors.green(`Successfully fetched content in `) +
-                            picocolors.white(
-                                milli((new Date() as any) - (startTime as any))
-                            ) +
-                            picocolors.green(`!`)
-                    )
-                })
+                .action(async () => await timeIt(`fetch ${name}`, fetchContent))
 
             cli.command(`clear-remote-${name}`)
                 .description(
                     `Removes the local copy of the remote ${name} data.`
                 )
-                .action(async () => {
-                    const startTime = new Date()
-                    await cleanContent()
-                    console.log(
-                        picocolors.green(`Successfully deleted content in `) +
-                            picocolors.white(
-                                milli((new Date() as any) - (startTime as any))
-                            ) +
-                            picocolors.green(`!`)
-                    )
-                })
+                .action(async () => await timeIt(`clear ${name}`, cleanContent))
         },
     }
 }
+
+export * from "./types"

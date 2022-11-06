@@ -15,69 +15,6 @@ module.exports = {
                 alt: "My Site Logo",
                 src: "img/logo.svg",
             },
-            items: [
-                {
-                    to: "docs/",
-                    activeBasePath: "docs",
-                    label: "Docs",
-                    position: "left",
-                },
-                { to: "blog", label: "Blog", position: "left" },
-                {
-                    href: "https://github.com/facebook/docusaurus",
-                    label: "GitHub",
-                    position: "right",
-                },
-            ],
-        },
-        footer: {
-            style: "dark",
-            links: [
-                {
-                    title: "Docs",
-                    items: [
-                        {
-                            label: "Style Guide",
-                            to: "docs/",
-                        },
-                        {
-                            label: "Second Doc",
-                            to: "docs/doc2/",
-                        },
-                    ],
-                },
-                {
-                    title: "Community",
-                    items: [
-                        {
-                            label: "Stack Overflow",
-                            href: "https://stackoverflow.com/questions/tagged/docusaurus",
-                        },
-                        {
-                            label: "Discord",
-                            href: "https://discordapp.com/invite/docusaurus",
-                        },
-                        {
-                            label: "Twitter",
-                            href: "https://twitter.com/docusaurus",
-                        },
-                    ],
-                },
-                {
-                    title: "More",
-                    items: [
-                        {
-                            label: "Blog",
-                            to: "blog",
-                        },
-                        {
-                            label: "GitHub",
-                            href: "https://github.com/facebook/docusaurus",
-                        },
-                    ],
-                },
-            ],
-            copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
         },
     },
     presets: [
@@ -86,15 +23,9 @@ module.exports = {
             {
                 docs: {
                     sidebarPath: require.resolve("./sidebars.js"),
-                    // Please change this to your repo.
-                    editUrl:
-                        "https://github.com/facebook/docusaurus/edit/master/website/",
                 },
                 blog: {
                     showReadingTime: true,
-                    // Please change this to your repo.
-                    editUrl:
-                        "https://github.com/facebook/docusaurus/edit/master/website/blog/",
                 },
                 theme: {
                     customCss: require.resolve("./src/css/custom.css"),
@@ -102,8 +33,6 @@ module.exports = {
             },
         ],
     ],
-    // THIS IS YOUR PLUGIN'S ENTRYPOINT.
-    // YOU CAN TEST IT OUT WITH DIFFERENT OPTIONS BY PASSING THEM IN THE OBJECT LITERAL
     plugins: [
         [
             require.resolve("../build/index.js"),
@@ -117,7 +46,7 @@ module.exports = {
             },
         ],
         [
-            require.resolve("../build/index.js"),
+            require.resolve("docusaurus-plugin-remote-content"),
             {
                 name: "powershell-docs",
                 id: "outputDirectoryTest",
@@ -138,7 +67,7 @@ module.exports = {
 title: Code of Conduct with Front Matter
 ---
 
-${content}`
+${content}`,
                         }
                     }
 
