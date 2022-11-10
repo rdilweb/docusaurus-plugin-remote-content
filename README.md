@@ -29,6 +29,8 @@ This is the secondary mode. You can use the Docusaurus CLI to update the content
 All you need to do is run `docusaurus download-remote-X`, where X is the `name` option given to the plugin.
 You can also use `docusaurus clear-remote-X` to remove the downloaded files.
 
+To enable CLI Sync set `noRuntimeDownloads: true` in the options.
+
 ## Alright, so how do I use this??
 
 Okay. Assuming you want to use constant sync, follow these steps:
@@ -132,6 +134,40 @@ ${content}`, // <-- this last part adds in the rest of the content, which would 
     return undefined
 },
 ```
+
+## Fetching Images
+To fetch images you need to have 2 instances of the plugin - 1 for markdown, and the other for images. With the images one, you would add `requestConfig: { responseType: "arraybuffer" }`
+
+### Example
+```javascript
+module.exports = {
+    // ...
+    plugins: [
+        [
+            "docusaurus-plugin-remote-content",
+            {
+                // options here
+                name: "markdown-content", // used by CLI, must be path safe
+                sourceBaseUrl: "https://my-site.com/content/", // the base url for the markdown (gets prepended to all of the documents when fetching)
+                outDir: "docs", // the base directory to output to.
+                documents: ["my-file.md", "README.md"], // the file names to download
+            },
+        ],
+        [
+            "docusaurus-plugin-remote-content",
+            {
+                // options here
+                name: "images-content", // used by CLI, must be path safe
+                sourceBaseUrl: "https://my-site.com/content/", // the base url for the markdown (gets prepended to all of the documents when fetching)
+                outDir: "docs", // the base directory to output to.
+                documents: ["my-image.png", "cool.gif"], // the file names to download
+                requestConfig: { responseType: "arraybuffer" }
+            },
+        ],
+    ],
+}
+```
+
 
 ## Contributing
 
