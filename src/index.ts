@@ -1,10 +1,35 @@
 import type { LoadContext, Plugin } from "@docusaurus/types"
-import axios from "axios"
+import axios, { AxiosRequestConfig } from "axios"
 import { existsSync, writeFileSync, mkdirSync } from "fs"
 import { join } from "path"
 import { sync as delFile } from "rimraf"
 import { timeIt } from "./utils"
-import { Fetchable, RemoteContentPluginOptions } from "./types"
+import { Fetchable, ModifyContentFunction, RemoteContentPluginOptions } from "./types"
+
+async function runModifications(sourceBaseUrl: string, id: string, requestConfig: AxiosRequestConfig, modifyContent: ModifyContentFunction | undefined) {
+    let content = (
+        await axios({
+            baseURL: sourceBaseUrl,
+            url: id,
+            ...requestConfig
+        })
+    ).data
+    let newIdent = id
+
+    const called = modifyContent?.(newIdent, content)
+
+    let cont = called?.content
+    if (cont && typeof cont === "string") {
+        content = cont
+    }
+
+    let fn
+    if ((fn = called?.filename) && typeof fn === "string") {
+        newIdent = fn
+    }
+
+    return { content, newIdent }
+}
 
 // noinspection JSUnusedGlobalSymbols
 export default async function pluginRemoteContent(
@@ -19,7 +44,7 @@ export default async function pluginRemoteContent(
         noRuntimeDownloads = false,
         performCleanup = true,
         requestConfig = {},
-        modifyContent = () => undefined,
+        modifyContent = () => undefined
     } = options
 
     if (!name) {
@@ -75,28 +100,7 @@ export default async function pluginRemoteContent(
         const c = await findRemoteItems()
 
         for (const { id } of c) {
-            //#region Run modifyContent (and fetch the data)
-            let content = (
-                await axios({
-                    baseURL: sourceBaseUrl,
-                    url: id,
-                    ...requestConfig,
-                })
-            ).data
-            let newIdent = id
-
-            const called = modifyContent?.(newIdent, content)
-
-            let cont = called?.content
-            if (cont && typeof cont === "string") {
-                content = cont
-            }
-
-            let fn
-            if ((fn = called?.filename) && typeof fn === "string") {
-                newIdent = fn
-            }
-            //#endregion
+            let { content, newIdent } = await runModifications(sourceBaseUrl, id, requestConfig, modifyContent)
 
             const checkIdent = newIdent.split("/").filter((seg) => seg !== "")
             checkIdent.pop()
@@ -145,7 +149,7 @@ export default async function pluginRemoteContent(
                     `Removes the local copy of the remote ${name} data.`
                 )
                 .action(async () => await timeIt(`clear ${name}`, cleanContent))
-        },
+        }
     }
 }
 

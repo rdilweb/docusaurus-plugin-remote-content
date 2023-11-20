@@ -1,6 +1,18 @@
 import { AxiosRequestConfig } from "axios"
 
 /**
+ * An optional function that modifies the file name and content of a downloaded file.
+ *
+ * @param filename The file's name.
+ * @param content The file's content.
+ * @returns undefined to leave the content/name as is, or an object containing the filename and the content.
+ */
+export type ModifyContentFunction = (
+    filename: string,
+    content: string
+) => { filename?: string; content?: string } | undefined
+
+/**
  * The plugin's options.
  */
 export interface RemoteContentPluginOptions {
@@ -49,10 +61,7 @@ export interface RemoteContentPluginOptions {
      * @param content The file's content.
      * @returns undefined to leave the content/name as is, or an object containing the filename and the content.
      */
-    modifyContent?(
-        filename: string,
-        content: string
-    ): { filename?: string; content?: string } | undefined
+    modifyContent?: ModifyContentFunction
 }
 
 // noinspection SpellCheckingInspection
