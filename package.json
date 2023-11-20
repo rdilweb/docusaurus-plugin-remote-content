@@ -1,7 +1,7 @@
 {
     "name": "docusaurus-plugin-remote-content",
     "version": "4.0.0",
-    "description": "A Docusaurus v2 plugin that allows you to fetch content from remote sources!",
+    "description": "A Docusaurus v2+ plugin that allows you to fetch content from remote sources!",
     "main": "build/index.js",
     "repository": "https://github.com/rdilweb/docusaurus-plugin-remote-content.git",
     "author": "Reece Dunham <me@rdil.rocks>",
@@ -16,26 +16,25 @@
         "tabWidth": 4
     },
     "devDependencies": {
-        "@docusaurus/types": "2.2.0",
-        "@types/react": "^18.0.20",
-        "@types/react-dom": "^18.0.6",
-        "@types/react-helmet": "^6.1.4",
-        "@types/rimraf": "^3.0.2",
-        "commander": "^9.4.0",
+        "@docusaurus/types": "^3.0.0",
+        "@types/react": "^18.2.37",
+        "@types/react-dom": "^18.2.15",
+        "@types/react-helmet": "^6.1.9",
+        "commander": "^11.1.0",
         "prettier": "^2.7.1",
-        "typescript": "^4.8.4"
+        "typescript": "^5.2.2"
     },
     "peerDependencies": {
-        "@docusaurus/core": "2.x"
+        "@docusaurus/core": "2.x || 3.x"
     },
     "bugs": {
         "url": "https://github.com/rdilweb/docusaurus-plugin-remote-content/issues"
     },
     "dependencies": {
-        "axios": "^1.1.3",
+        "axios": "^1.6.0",
         "picocolors": "^1.0.0",
         "pretty-ms": "^7.0.1",
-        "rimraf": "^3.0.2"
+        "rimraf": "^5.0.5"
     },
     "files": [
         "build/*",
@@ -60,5 +59,5 @@
     "workspaces": [
         "testsite"
     ],
-    "packageManager": "yarn@4.0.0-rc.27"
+    "packageManager": "yarn@4.0.2"
 }
