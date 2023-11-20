@@ -1,10 +1,11 @@
+/** @type {import("@docusaurus/types").DocusaurusConfig} */
 module.exports = {
     title: "My Site",
     tagline: "The tagline of my site",
     url: "https://your-docusaurus-test-site.com",
     baseUrl: "/",
-    onBrokenLinks: "throw",
-    onBrokenMarkdownLinks: "warn",
+    onBrokenLinks: "log",
+    onBrokenMarkdownLinks: "log",
     favicon: "img/favicon.ico",
     organizationName: "rdilweb", // Usually your GitHub org/user name.
     projectName: "docusaurus-plugin-remote-content", // Usually your repo name.
@@ -35,14 +36,14 @@ module.exports = {
     ],
     plugins: [
         [
-            require.resolve("../build/index.js"),
+            require.resolve("docusaurus-plugin-remote-content"),
             {
                 name: "docs",
                 id: "basicTest",
                 outDir: "docs",
                 sourceBaseUrl:
-                    "https://raw.githubusercontent.com/rdilweb/rdil.rocks/master/docs/docs",
-                documents: ["api.md"],
+                    "https://raw.githubusercontent.com/PowerShell/PowerShell/master/docs",
+                documents: ["FAQ.md"],
             },
         ],
         [
@@ -76,7 +77,7 @@ ${content}`,
             },
         ],
         [
-            require.resolve("../build/index.js"),
+            require.resolve("docusaurus-plugin-remote-content"),
             {
                 name: "github-labels",
                 id: "pathSlashesTest",
