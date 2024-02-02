@@ -1,6 +1,6 @@
 # docusaurus-plugin-remote-content
 
-A Docusaurus v2 plugin that downloads content from remote sources.
+A Docusaurus plugin that downloads content from remote sources.
 
 With this plugin, you can write the Markdown for your content somewhere else, and use them on your Docusaurus site, without copying and pasting.
 
